@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
@@ -90,9 +89,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-      ),
       body: Stack(
         children: [
           RepaintBoundary(
@@ -147,26 +143,43 @@ class _HomePageState extends State<HomePage> {
             right: 0.0,
             child: Container(
               height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: artworkImages.length,
-                itemBuilder: (context, index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedArtworkIndex = index;
-                      });
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Page1(images: _savedArtworks),
+                        ),
+                      );
                     },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        artworkImages[index],
-                        width: 80,
-                        height: 80,
-                      ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: artworkImages.length,
+                      itemBuilder: (context, index) {
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedArtworkIndex = index;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(
+                              artworkImages[index],
+                              width: 80,
+                              height: 80,
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
             ),
           ),
@@ -175,25 +188,6 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _takeScreenshot,
         child: const Icon(Icons.save),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Page1(images: _savedArtworks),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 50), // Placeholder for alignment
-          ],
-        ),
       ),
     );
   }
