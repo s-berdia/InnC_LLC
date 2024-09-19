@@ -7,6 +7,7 @@ import 'package:path/path.dart' show join;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:share/share.dart'; // Import the share package
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,7 @@ class _HomePageState extends State<HomePage> {
     Rect.fromLTWH(5, 10, 400, 700), // Area for background3
   ];
 
-  Future<void> _takeScreenshot() async {
+  Future<void> _shareScreenshot() async {
     try {
       RenderRepaintBoundary boundary = _screenshotKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       var image = await boundary.toImage();
@@ -76,9 +77,9 @@ class _HomePageState extends State<HomePage> {
       final file = File(path);
       await file.writeAsBytes(pngBytes);
 
-      setState(() {
-        _savedArtworks.add(file);
-      });
+      // Share the screenshot
+      await Share.shareFiles([file.path], text: 'Check out my artwork!');
+
     } catch (e) {
       if (kDebugMode) {
         print(e);
@@ -89,6 +90,9 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home Page'),
+      ),
       body: Stack(
         children: [
           RepaintBoundary(
@@ -141,53 +145,53 @@ class _HomePageState extends State<HomePage> {
             bottom: 20.0,
             left: 0.0,
             right: 0.0,
-            child: Container(
+            child: SizedBox(
               height: 100,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Page1(images: _savedArtworks),
-                        ),
-                      );
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: artworkImages.length,
+                itemBuilder: (context, index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedArtworkIndex = index;
+                      });
                     },
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: artworkImages.length,
-                      itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedArtworkIndex = index;
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              artworkImages[index],
-                              width: 80,
-                              height: 80,
-                            ),
-                          ),
-                        );
-                      },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        artworkImages[index],
+                        width: 80,
+                        height: 80,
+                      ),
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
             ),
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _takeScreenshot,
-        child: const Icon(Icons.save),
+      floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+          FloatingActionButton(
+          onPressed: () {
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+    builder: (context) => Page1(images: _savedArtworks),
+    ),
+    );
+    },
+      child: const Icon(Icons.add),
+    ),
+    const SizedBox(height: 10), // Spacer between the buttons
+      FloatingActionButton(
+        onPressed: _shareScreenshot,
+        child: const Icon(Icons.share),
+      ),
+      ],
       ),
     );
   }
