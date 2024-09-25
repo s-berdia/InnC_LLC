@@ -35,6 +35,8 @@ dependencies:
   path_provider: ^2.0.11
   path: ^1.8.2
   carousel_slider: ^4.0.0
+  share: ^2.0.4
+
 
 
 
