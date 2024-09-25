@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.myapp.name">
+
+    <!-- Permissions should be declared inside the manifest tag, but outside the application tag -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="Artvision Visualizer"
-        android:icon="@mipmap/icon.png">
-        <uses-permission android:name="android.permission.INTERNET"/>
-    </application>
-</manifest>
+        android:icon="@android:mipmap/ic_launcher">
+    <!-- Your application-specific settings go here -->
+</application>
+    </manifest>
 
