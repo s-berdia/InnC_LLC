@@ -7,7 +7,8 @@ import 'package:path/path.dart' show join;
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:share/share.dart'; // Import the share package
+import 'package:share/share.dart';
+import 'package:flutter/gestures.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +37,16 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   final GlobalKey _screenshotKey = GlobalKey();
   final List<File> _savedArtworks = [];
   int _currentBackgroundIndex = 0;
   int _selectedArtworkIndex = -1;
+  int _selectedFrameIndex = -1;
+  double _scale = 1.0;
+  double _previousScale = 1.0;
+  bool _isSelectingFrame = false;
+  String _selectedTab = "artworks";  // Added for tab selection
 
   final List<String> backgroundImages = [
     'assets/background1.jpg',
@@ -54,12 +60,21 @@ class _HomePageState extends State<HomePage> {
     'assets/artwork3.png',
   ];
 
-  // Define the areas for artwork placement for each background image
-  final List<Rect> artworkAreas = [
-    Rect.fromLTWH(5, 10, 400, 400), // Area for background1
-    Rect.fromLTWH(130, 70, 300, 400), // Area for background2
-    Rect.fromLTWH(5, 10, 400, 700), // Area for background3
+  final List<String> frameImages = [
+    'assets/frame1.jpg',
+    'assets/frame2.png',
+    'assets/frame3.png',
   ];
+
+  final List<String> imageRatios = ["Portrait", "Landscape", "Square"];
+
+  TabController? _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
 
   Future<void> _shareScreenshot() async {
     try {
@@ -77,9 +92,7 @@ class _HomePageState extends State<HomePage> {
       final file = File(path);
       await file.writeAsBytes(pngBytes);
 
-      // Share the screenshot
       await Share.shareFiles([file.path], text: 'Check out my artwork!');
-
     } catch (e) {
       if (kDebugMode) {
         print(e);
@@ -93,64 +106,150 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Home Page'),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          RepaintBoundary(
-            key: _screenshotKey,
+          Expanded(
             child: Stack(
               children: [
-                CarouselSlider(
-                  options: CarouselOptions(
-                    height: MediaQuery.of(context).size.height,
-                    viewportFraction: 1.0,
-                    onPageChanged: (index, reason) {
-                      setState(() {
-                        _currentBackgroundIndex = index;
-                      });
-                    },
-                  ),
-                  items: backgroundImages.map((imagePath) {
-                    return Builder(
-                      builder: (BuildContext context) {
-                        return Container(
-                          width: MediaQuery.of(context).size.width,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(imagePath),
-                              fit: BoxFit.cover,
+                RepaintBoundary(
+                  key: _screenshotKey,
+                  child: SizedBox.expand(
+                    child: Transform.scale(
+                      scale: _scale,
+                      child: Stack(
+                        children: [
+                          CarouselSlider(
+                            options: CarouselOptions(
+                              height: MediaQuery.of(context).size.height,
+                              viewportFraction: 1.0,
+                              onPageChanged: (index, reason) {
+                                setState(() {
+                                  _currentBackgroundIndex = index;
+                                });
+                              },
                             ),
+                            items: backgroundImages.map((imagePath) {
+                              return Builder(
+                                builder: (BuildContext context) {
+                                  return Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                      image: DecorationImage(
+                                        image: AssetImage(imagePath),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }).toList(),
                           ),
-                        );
-                      },
-                    );
-                  }).toList(),
-                ),
-                if (_selectedArtworkIndex != -1)
-                  Positioned(
-                    left: artworkAreas[_currentBackgroundIndex].left,
-                    top: artworkAreas[_currentBackgroundIndex].top,
-                    width: artworkAreas[_currentBackgroundIndex].width,
-                    height: artworkAreas[_currentBackgroundIndex].height,
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      child: Image.asset(
-                        artworkImages[_selectedArtworkIndex],
+                          if (_selectedArtworkIndex != -1)
+                            Positioned(
+                              left: 50, // Adjusted for display
+                              top: 50,  // Adjusted for display
+                              width: 200,
+                              height: 200,
+                              child: FittedBox(
+                                fit: BoxFit.contain,
+                                child: Image.asset(artworkImages[_selectedArtworkIndex]),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
+                ),
+                _buildMenu2(),
               ],
             ),
           ),
-          Positioned(
-            bottom: 20.0,
-            left: 0.0,
-            right: 0.0,
-            child: SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: artworkImages.length,
-                itemBuilder: (context, index) {
+          _buildMenu1(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,  // Default to first tab (2D)
+        onTap: (index) {
+          if (index == 0) {
+            // Stay on 2D page
+          } else if (index == 1) {
+            // AR page (currently blank)
+          } else if (index == 2) {
+            // Webpage (currently blank)
+          } else if (index == 3) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Page1(images: _savedArtworks)),
+            );
+          } else if (index == 4) {
+            // Settings page (currently blank)
+          }
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo),
+            label: '2D',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera),
+            label: 'AR',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.web),
+            label: 'Webpage',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_album),
+            label: 'Gallery',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenu1() {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: _tabController,
+        onTap: (index) {
+          setState(() {
+            if (index == 0) {
+              _selectedTab = "artworks";
+            } else if (index == 1) {
+              _selectedTab = "frames";
+            } else {
+              _selectedTab = "ratios";
+            }
+          });
+        },
+        tabs: const [
+          Tab(text: 'Artworks'),
+          Tab(text: 'Frames'),
+          Tab(text: 'Image Ratio'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenu2() {
+    if (_selectedTab == "artworks") {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: SizedBox(
+          height: 100,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(
+                artworkImages.length,
+                    (index) {
                   return GestureDetector(
                     onTap: () {
                       setState(() {
@@ -159,41 +258,67 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        artworkImages[index],
-                        width: 80,
-                        height: 80,
-                      ),
+                      child: Image.asset(artworkImages[index], width: 80, height: 80),
                     ),
                   );
                 },
               ),
             ),
           ),
-        ],
-      ),
-      floatingActionButton: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-          FloatingActionButton(
-          onPressed: () {
-    Navigator.push(
-    context,
-    MaterialPageRoute(
-    builder: (context) => Page1(images: _savedArtworks),
-    ),
-    );
-    },
-      child: const Icon(Icons.add),
-    ),
-    const SizedBox(height: 10), // Spacer between the buttons
-      FloatingActionButton(
-        onPressed: _shareScreenshot,
-        child: const Icon(Icons.share),
-      ),
-      ],
-      ),
-    );
+        ),
+      );
+    } else if (_selectedTab == "frames") {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: SizedBox(
+          height: 100,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(
+                frameImages.length,
+                    (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedFrameIndex = index;
+                        _selectedTab = "artworks";  // Return to Artworks tab after selecting frame
+                      });
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(frameImages[index], width: 80, height: 80),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+    } else {
+      return Positioned(
+        bottom: 0,
+        left: 0,
+        right: 0,
+        child: SizedBox(
+          height: 100,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: imageRatios.map((ratio) {
+              return ElevatedButton(
+                onPressed: () {
+                  // Handle aspect ratio change here
+                },
+                child: Text(ratio),
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
   }
 }
 
