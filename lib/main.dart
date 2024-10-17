@@ -39,14 +39,20 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   final GlobalKey _screenshotKey = GlobalKey();
-  final List<File> _savedArtworks = [];
+  final List<File> _savedArtworks = [
+    // Add some dummy file paths or real ones if you're testing with real files
+    // File('path/to/image1.jpg'),
+    // File('path/to/image2.jpg'),
+  ];
   int _currentBackgroundIndex = 0;
   int _selectedArtworkIndex = -1;
   int _selectedFrameIndex = -1;
+  int _currentIndex = 0; // Controls the current tab index
+  int? _selectedGalleryImageIndex; // Index to track the selected image for detail view
   double _scale = 1.0;
   double _previousScale = 1.0;
   bool _isSelectingFrame = false;
-  String _selectedTab = "artworks";  // Added for tab selection
+  String _selectedTab = "artworks"; // Added for tab selection
 
   final List<String> backgroundImages = [
     'assets/background1.jpg',
@@ -100,114 +106,76 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Home Page'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                RepaintBoundary(
-                  key: _screenshotKey,
-                  child: SizedBox.expand(
-                    child: Transform.scale(
-                      scale: _scale,
-                      child: Stack(
-                        children: [
-                          CarouselSlider(
-                            options: CarouselOptions(
-                              height: MediaQuery.of(context).size.height,
-                              viewportFraction: 1.0,
-                              onPageChanged: (index, reason) {
-                                setState(() {
-                                  _currentBackgroundIndex = index;
-                                });
-                              },
-                            ),
-                            items: backgroundImages.map((imagePath) {
-                              return Builder(
-                                builder: (BuildContext context) {
-                                  return Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        image: AssetImage(imagePath),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              );
-                            }).toList(),
+  // To handle the bottom navigation bar taps
+  void onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+      _selectedGalleryImageIndex = null; // Reset when switching tabs
+    });
+  }
+
+  // Build the initial home page content with the carousel and artworks
+  Widget _buildHomePage() {
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            children: [
+              RepaintBoundary(
+                key: _screenshotKey,
+                child: SizedBox.expand(
+                  child: Transform.scale(
+                    scale: _scale,
+                    child: Stack(
+                      children: [
+                        CarouselSlider(
+                          options: CarouselOptions(
+                            height: MediaQuery.of(context).size.height,
+                            viewportFraction: 1.0,
+                            onPageChanged: (index, reason) {
+                              setState(() {
+                                _currentBackgroundIndex = index;
+                              });
+                            },
                           ),
-                          if (_selectedArtworkIndex != -1)
-                            Positioned(
-                              left: 50, // Adjusted for display
-                              top: 50,  // Adjusted for display
-                              width: 200,
-                              height: 200,
-                              child: FittedBox(
-                                fit: BoxFit.contain,
-                                child: Image.asset(artworkImages[_selectedArtworkIndex]),
-                              ),
+                          items: backgroundImages.map((imagePath) {
+                            return Builder(
+                              builder: (BuildContext context) {
+                                return Container(
+                                  width: MediaQuery.of(context).size.width,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage(imagePath),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }).toList(),
+                        ),
+                        if (_selectedArtworkIndex != -1)
+                          Positioned(
+                            left: 50,
+                            top: 50,
+                            width: 200,
+                            height: 200,
+                            child: FittedBox(
+                              fit: BoxFit.contain,
+                              child: Image.asset(artworkImages[_selectedArtworkIndex]),
                             ),
-                        ],
-                      ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
-                _buildMenu2(),
-              ],
-            ),
+              ),
+              _buildMenu2(),
+            ],
           ),
-          _buildMenu1(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,  // Default to first tab (2D)
-        onTap: (index) {
-          if (index == 0) {
-            // Stay on 2D page
-          } else if (index == 1) {
-            // AR page (currently blank)
-          } else if (index == 2) {
-            // Webpage (currently blank)
-          } else if (index == 3) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Page1(images: _savedArtworks)),
-            );
-          } else if (index == 4) {
-            // Settings page (currently blank)
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.photo),
-            label: '2D',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera),
-            label: 'AR',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.web),
-            label: 'Webpage',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.photo_album),
-            label: 'Gallery',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+        ),
+        _buildMenu1(),
+      ],
     );
   }
 
@@ -320,61 +288,102 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       );
     }
   }
-}
 
-class Page1 extends StatelessWidget {
-  final List<File> images;
+  // Build the gallery content
+  Widget _buildGallery() {
+    if (_savedArtworks.isEmpty) {
+      return Center(child: Text('No images in the gallery'));
+    }
 
-  const Page1({super.key, required this.images});
+    if (_selectedGalleryImageIndex != null) {
+      // If an image is selected, show the image detail view
+      return _buildImageDetailView();
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gallery'),
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
       ),
-      body: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-        ),
-        itemCount: images.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => Page2(image: images[index]),
-                ),
-              );
-            },
-            child: Image.file(images[index]),
-          );
-        },
-      ),
+      itemCount: _savedArtworks.length,
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedGalleryImageIndex = index; // Show image detail view
+            });
+          },
+          child: Image.file(_savedArtworks[index]),
+        );
+      },
     );
   }
-}
 
-class Page2 extends StatelessWidget {
-  final File image;
+  // Build the image detail view for the selected gallery image
+  Widget _buildImageDetailView() {
+    final selectedImage = _savedArtworks[_selectedGalleryImageIndex!];
+    return Column(
+      children: [
+        Expanded(
+          child: Image.file(selectedImage), // Display the full image
+        ),
+        ElevatedButton(
+          onPressed: () {
+            setState(() {
+              _selectedGalleryImageIndex = null; // Go back to gallery
+            });
+          },
+          child: const Text('Back to Gallery'),
+        ),
+      ],
+    );
+  }
 
-  const Page2({super.key, required this.image});
+  // Controls what content is displayed based on the selected tab
+  Widget _buildContent() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomePage();
+      case 1:
+        return Center(child: Text('AR Content'));
+      case 2:
+        return Center(child: Text('Webpage Content'));
+      case 3:
+        return _buildGallery();
+      default:
+        return _buildHomePage();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Shopping Cart'),
+        title: const Text('Home Page'),
       ),
-      body: Column(
-        children: <Widget>[
-          Image.file(image),
-          ElevatedButton(
-            onPressed: () {
-              // Add framing and buying logic here
-            },
-            child: const Text('Frame and Buy'),
+      body: _buildContent(), // Shows content based on _currentIndex
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: onTabTapped,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo, color: Colors.blue, size: 30.0),
+            label: '2D',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera, color: Colors.blue, size: 30.0),
+            label: 'AR',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.web, color: Colors.blue, size: 30.0),
+            label: 'Webpage',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.photo_album, color: Colors.blue, size: 30.0),
+            label: 'Gallery',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings, color: Colors.blue, size: 30.0),
+            label: 'Settings',
           ),
         ],
       ),
