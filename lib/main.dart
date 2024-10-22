@@ -87,7 +87,7 @@ class _MainPageState extends State<MainPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.web),
-            label: 'Webpage',
+            label: 'Discover',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.photo_album),

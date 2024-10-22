@@ -30,12 +30,15 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+
   camera: ^0.10.0
   image_picker: ^1.1.2
   path_provider: ^2.0.11
   path: ^1.8.2
   carousel_slider: ^4.0.0
   share: ^2.0.4
+  webview_flutter: ^4.0.2
+  material_symbols_icons: ^4.2789.0
 
 
 

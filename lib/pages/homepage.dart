@@ -75,7 +75,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       left: 20,
       right: 20,
       child: Container(
-        //padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(25.0),
@@ -120,7 +119,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     } else if (_selectedTab == "ratios") {
       return _buildRatioMenu();
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 
   Widget _buildArtworkMenu() {
@@ -143,7 +142,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                       return GestureDetector(
                         onTap: () {
                           setState(() {
-                            _selectedArtworkIndex = index;
+                            if (_selectedArtworkIndex == index) {
+                              _selectedArtworkIndex = -1;
+                            } else {
+                              _selectedArtworkIndex = index;
+                            }
                           });
                         },
                         child: Padding(
@@ -191,7 +194,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                   ],
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.add, size: 24, color: Colors.blue),
+                  icon: Icon(Icons.add, size: 24, color: Colors.blue),
                   onPressed: () {
                     widget.setIndex(3); // Navigate to Gallery page using index 3
                   },
@@ -220,7 +223,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      _selectedFrameIndex = index;
+                      if (_selectedFrameIndex == index) {
+                        _selectedFrameIndex = -1;
+                      } else {
+                        _selectedFrameIndex = index;
+                      }
                     });
                   },
                   child: Padding(
@@ -270,14 +277,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               },
               child: const Text("Portrait"),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             ElevatedButton(
               onPressed: () {
                 // Handle aspect ratio change here
               },
               child: const Text("Landscape"),
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             ElevatedButton(
               onPressed: () {
                 // Handle aspect ratio change here
@@ -321,24 +328,28 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           if (_selectedArtworkIndex != -1)
             Positioned(
-              left: 50,
-              top: 50,
-              width: 200,
-              height: 200,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Image.asset(artworkImages[_selectedArtworkIndex]),
+              top: MediaQuery.of(context).size.height * 0.25,
+              left: MediaQuery.of(context).size.width * 0.25,
+              child: SizedBox(
+                width: 200,
+                height: 200,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Image.asset(artworkImages[_selectedArtworkIndex]),
+                ),
               ),
             ),
           if (_selectedFrameIndex != -1)
             Positioned(
-              left: 45,
-              top: 45,
-              width: 210,
-              height: 210,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Image.asset(frameImages[_selectedFrameIndex]),
+              top: MediaQuery.of(context).size.height * 0.25,
+              left: MediaQuery.of(context).size.width * 0.25,
+              child: SizedBox(
+                width: 210,
+                height: 210,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Image.asset(frameImages[_selectedFrameIndex]),
+                ),
               ),
             ),
           _buildMenu1(),
