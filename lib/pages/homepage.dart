@@ -37,7 +37,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     'assets/frame2.png',
     'assets/frame3.png',
   ];
+  final List<Offset> defaultArtworkPositions = [
+    Offset(0.25, 0.15), // For background 0
+    Offset(0.25, 0.15), // For background 1
+    Offset(0.25, 0.15), // For background 2
+    Offset(0.25, 0.2), // For background 3
+    Offset(0.25, 0.12), // For background 4
+    Offset(0.25, 0.2), // For background 5
+    Offset(0.25, 0.23), // For background 6
+    Offset(0.25, 0.23), // For background 7
+    Offset(0.25, 0.12), // For background 8
+    Offset(0.25, 0.23), // For background 9
+    Offset(0.25, 0.17), // For background 10
+    Offset(0.25, 0.17), // For background 11
+    Offset(0.25, 0.17), // For background 12
+  ];
 
+  static const double artworkSize = 300.0;
   int _currentBackgroundIndex = 0;
   int _selectedArtworkIndex = -1;
   int _selectedFrameIndex = -1;
@@ -328,14 +344,14 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           ),
           if (_selectedArtworkIndex != -1)
             Positioned(
-              top: MediaQuery.of(context).size.height * 0.25,
-              left: MediaQuery.of(context).size.width * 0.25,
+              top: MediaQuery.of(context).size.height * defaultArtworkPositions[_currentBackgroundIndex].dy,
+              left: MediaQuery.of(context).size.width * defaultArtworkPositions[_currentBackgroundIndex].dx,
               child: SizedBox(
-                width: 200,
-                height: 200,
-                child: FittedBox(
+                width: artworkSize,
+                height: artworkSize,
+                child: Image.asset(
+                  artworkImages[_selectedArtworkIndex],
                   fit: BoxFit.contain,
-                  child: Image.asset(artworkImages[_selectedArtworkIndex]),
                 ),
               ),
             ),
