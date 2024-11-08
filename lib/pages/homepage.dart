@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 
+
 class HomePage extends StatefulWidget {
   final Function(int) setIndex;
 
@@ -38,19 +39,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     'assets/frame3.png',
   ];
   final List<Offset> defaultArtworkPositions = [
-    Offset(0.25, 0.15), // For background 0
-    Offset(0.25, 0.15), // For background 1
-    Offset(0.25, 0.15), // For background 2
-    Offset(0.25, 0.2), // For background 3
-    Offset(0.25, 0.12), // For background 4
-    Offset(0.25, 0.2), // For background 5
-    Offset(0.25, 0.23), // For background 6
-    Offset(0.25, 0.23), // For background 7
-    Offset(0.25, 0.12), // For background 8
-    Offset(0.25, 0.23), // For background 9
-    Offset(0.25, 0.17), // For background 10
-    Offset(0.25, 0.17), // For background 11
-    Offset(0.25, 0.17), // For background 12
+    Offset(0.12, 0.12), // For background 0
+    Offset(0.12, 0.12), // For background 1
+    Offset(0.12, 0.12), // For background 2
+    Offset(0.12, 0.15), // For background 3
+    Offset(0.12, 0.08), // For background 4
+    Offset(0.12, 0.15), // For background 5
+    Offset(0.12, 0.2), // For background 6
+    Offset(0.12, 0.2), // For background 7
+    Offset(0.12, 0.12), // For background 8
+    Offset(0.12, 0.2), // For background 9
+    Offset(0.12, 0.2), // For background 10
+    Offset(0.12, 0.2), // For background 11
+    Offset(0.12, 0.2), // For background 12
   ];
 
   static const double artworkSize = 300.0;
@@ -349,10 +350,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
               child: SizedBox(
                 width: artworkSize,
                 height: artworkSize,
-                child: Image.asset(
-                  artworkImages[_selectedArtworkIndex],
-                  fit: BoxFit.contain,
-                ),
+                  child: Image.asset(
+                    artworkImages[_selectedArtworkIndex],
+                    fit: BoxFit.contain,
+                  ),
               ),
             ),
           if (_selectedFrameIndex != -1)
